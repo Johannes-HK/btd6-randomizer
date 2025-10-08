@@ -148,7 +148,7 @@ maps = [
     {"name": "Ravine", "water": True},
     {"name": "Resort", "water": True},
     {"name": "Sanctuary", "water": True},
-    {"name": "Scrapyard", "water": True},
+    {"name": "Scrapyard", "water": False},
     {"name": "Skates", "water": True},
     {"name": "Spillway", "water": True},
     {"name": "Spring Spring", "water": True},
