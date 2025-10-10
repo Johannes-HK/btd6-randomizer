@@ -7,13 +7,27 @@ from io import BytesIO
 from PIL import Image
 import base64
 
-# Make sure images folder exists
 IMG_DIR = "images"
 os.makedirs(IMG_DIR, exist_ok=True)
 
 # --- UTILITY FUNCTIONS ---
 def sanitize_filename(name: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in name).lower()
+
+def scale_wiki_image(url: str, display_width: int) -> str:
+
+    import re
+
+    scale_width = int(display_width * 1.5)
+
+    url = re.sub(r"/scale-to-width-down/\d+", "", url)
+
+    parts = url.split("?")
+    scaled_url = parts[0].rstrip("/") + f"/scale-to-width-down/{scale_width}"
+    if len(parts) > 1:
+        scaled_url += "?" + parts[1]
+    
+    return scaled_url
 
 def get_ext_from_url(url: str) -> str:
     path = urllib.parse.urlparse(url).path
@@ -71,7 +85,6 @@ def img_to_base64(path_or_url):
         print("Error loading image:", e)
         return None
 
-# --- Your existing data (maps/ heroes / towers) ---
 modes = [
     "Standard (Easy)", "Primary Only", "Deflation", "Standard (Medium)", "Reverse",
     "Military Only", "Apopalypse", "Standard (Hard)", "Alternate Bloons Round",
@@ -163,7 +176,7 @@ maps = [
 ]
 
 heroes = [
-    "Gwendolin", "Quincy", "Obyn Greenfoot", "Admiral Brickell", "Silas", "Striker Jones"
+    "Gwendolin", "Quincy", "Obyn Greenfoot", "Admiral Brickell", "Silas", "Striker Jones", "Adora"
 ]
 
 maps_images = {
@@ -267,7 +280,6 @@ mode_images = {
     "Half Cash": "https://static.wikia.nocookie.net/b__/images/0/07/HalfMoneyBtn.png/revision/latest?cb=20230512114448&path-prefix=bloons",
 }
 
-# --- HERO IMAGES ---
 hero_images = {
     "Quincy": "https://static.wikia.nocookie.net/b__/images/a/a8/QuincyPortrait.png/revision/latest?cb=20190612021048&path-prefix=bloons",
     "Gwendolin": "https://static.wikia.nocookie.net/b__/images/b/b9/GwendolinPortrait.png/revision/latest?cb=20190612022457&path-prefix=bloons",
@@ -275,9 +287,19 @@ hero_images = {
     "Admiral Brickell": "https://static.wikia.nocookie.net/b__/images/4/4d/AdmiralBrickellPortrait.png/revision/latest?cb=20200602105905&path-prefix=bloons",
     "Silas": "https://static.wikia.nocookie.net/b__/images/a/a2/SilasPortrait.png/revision/latest?cb=20250827063052&path-prefix=bloons",
     "Striker Jones": "https://static.wikia.nocookie.net/b__/images/b/b4/StrikerJonesPortrait.png/revision/latest?cb=20190612023137&path-prefix=bloons"
+    "Adora": "https://static.wikia.nocookie.net/b__/images/2/2a/AdoraPortrait.png/revision/latest/scale-to-width-down/1000?cb=20191213222754&path-prefix=bloons",
+    "Psi": "https://static.wikia.nocookie.net/b__/images/9/96/PsiPortrait.png/revision/latest/scale-to-width-down/1000?cb=20230322222255&path-prefix=bloons",
+    "Sauda": "https://static.wikia.nocookie.net/b__/images/e/eb/SaudaPortrait.png/revision/latest/scale-to-width-down/1000?cb=20210311044157&path-prefix=bloons",
+    "Corvus": "https://static.wikia.nocookie.net/b__/images/e/e6/CorvusPortrait.png/revision/latest/scale-to-width-down/1000?cb=20231206075315&path-prefix=bloons",
+    "Geraldo": "https://static.wikia.nocookie.net/b__/images/9/99/GeraldoPortrait.png/revision/latest/scale-to-width-down/1000?cb=20220413053005&path-prefix=bloons",
+    "Captain Churchill": "https://static.wikia.nocookie.net/b__/images/5/5a/CaptainChurchillPortrait.png/revision/latest/scale-to-width-down/1000?cb=20190612024733&path-prefix=bloons",
+    "Etienne": "https://static.wikia.nocookie.net/b__/images/8/82/EtiennePortrait.png/revision/latest?cb=20200903041051&path-prefix=bloons",
+    "Benjamin": "https://static.wikia.nocookie.net/b__/images/a/af/BenjaminPortrait.png/revision/latest/scale-to-width-down/1000?cb=20190612025211&path-prefix=bloons",
+    "Rosalia": "https://static.wikia.nocookie.net/b__/images/6/6c/RosaliaPortrait.png/revision/latest/scale-to-width-down/1000?cb=20240529062931&path-prefix=bloons",
+    "Pat Fusty": "https://static.wikia.nocookie.net/b__/images/7/76/PatFustyPortrait.png/revision/latest/scale-to-width-down/1000?cb=20190612030015&path-prefix=bloons",
+    "Ezili": "https://static.wikia.nocookie.net/b__/images/d/d3/EziliPortrait.png/revision/latest/scale-to-width-down/1000?cb=20190612025715&path-prefix=bloons",
 }
 
-# --- TOWER IMAGES ---
 tower_images = {
     "Dart Monkey": "https://static.wikia.nocookie.net/b__/images/b/b2/000-DartMonkey.png/revision/latest?cb=20190522014750&path-prefix=bloons",
     "Boomerang Monkey": "https://static.wikia.nocookie.net/b__/images/5/51/BTD6_Boomerang_Monkey.png/revision/latest?cb=20180616145853&path-prefix=bloons",
@@ -306,7 +328,6 @@ tower_images = {
     "Beast Handler": "https://static.wikia.nocookie.net/b__/images/5/54/000-BeastHandler.png/revision/latest?cb=20230404070911&path-prefix=bloons",
 }
 
-# --- Tower groups & randomizer logic (your rules) ---
 primary_towers = [
     "Dart Monkey", "Boomerang Monkey", "Bomb Shooter", "Tack Shooter",
     "Ice Monkey", "Glue Gunner", "Desperado"
@@ -359,7 +380,6 @@ def randomize_btd6_setup():
         if tower_selection.count(tower) < 3:
             tower_selection.append(tower)
 
-    # Sort towers in BTD6 order
     tower_selection.sort(key=lambda t: tower_order.index(t))
 
 
@@ -389,11 +409,16 @@ if st.button("🎲 Randomize Setup"):
 
     col1, col2 = st.columns([2,1])
 
-    # --- MAP ---
+    # --- MAP + MODE (side by side) ---
     with col1:
         maps_url = maps_images.get(map_choice['name'])
-        maps_src = ensure_image(map_choice['name'], maps_url) if maps_url else None
-        maps_b64 = img_to_base64(maps_src) if maps_src else None
+        if maps_url:
+            maps_url = scale_wiki_image(maps_url, display_width=300)
+            maps_src = ensure_image(map_choice['name'], maps_url)
+            maps_b64 = img_to_base64(maps_src) if maps_src else None
+        else:
+            maps_b64 = None
+
         st.markdown(f"""
         <div class="btd6-box btd6-map">
             <h3>Map</h3>
@@ -405,8 +430,13 @@ if st.button("🎲 Randomize Setup"):
     # --- MODE ---
     with col2:
         mode_url = mode_images.get(mode)
-        mode_src = ensure_image(mode, mode_url) if mode_url else None
-        mode_b64 = img_to_base64(mode_src) if mode_src else None
+        if mode_url:
+            mode_url = scale_wiki_image(mode_url, display_width=150)
+            mode_src = ensure_image(mode, mode_url)
+            mode_b64 = img_to_base64(mode_src) if mode_src else None
+        else:
+            mode_b64 = None
+
         st.markdown(f"""
         <div class="btd6-box btd6-mode">
             <h3>Mode</h3>
@@ -417,8 +447,13 @@ if st.button("🎲 Randomize Setup"):
 
     # --- HERO ---
     hero_url = hero_images.get(hero)
-    hero_src = ensure_image(hero, hero_url) if hero_url else None
-    hero_b64 = img_to_base64(hero_src) if hero_src else None
+    if hero_url:
+        hero_url = scale_wiki_image(hero_url, display_width=200)
+        hero_src = ensure_image(hero, hero_url)
+        hero_b64 = img_to_base64(hero_src) if hero_src else None
+    else:
+        hero_b64 = None
+
     st.markdown(f"""
     <div class="btd6-box btd6-hero">
         <h3>Hero</h3>
@@ -431,8 +466,12 @@ if st.button("🎲 Randomize Setup"):
     tower_html = ""
     for t in towers:
         t_url = tower_images.get(t)
-        t_src = ensure_image(t, t_url) if t_url else None
-        t_b64 = img_to_base64(t_src) if t_src else None
+        if t_url:
+            t_url = scale_wiki_image(t_url, display_width=100)
+            t_src = ensure_image(t, t_url)
+            t_b64 = img_to_base64(t_src) if t_src else None
+        else:
+            t_b64 = None
         tower_html += f'<div><b>{t}</b><br>{f"<img src=\"{t_b64}\" width=\"100\">" if t_b64 else ""}</div>'
 
     st.markdown(f"""
