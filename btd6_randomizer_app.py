@@ -286,7 +286,7 @@ hero_images = {
     "Obyn Greenfoot": "https://static.wikia.nocookie.net/b__/images/7/72/ObynGreenFootPortrait.png/revision/latest?cb=20190612023839&path-prefix=bloons",
     "Admiral Brickell": "https://static.wikia.nocookie.net/b__/images/4/4d/AdmiralBrickellPortrait.png/revision/latest?cb=20200602105905&path-prefix=bloons",
     "Silas": "https://static.wikia.nocookie.net/b__/images/a/a2/SilasPortrait.png/revision/latest?cb=20250827063052&path-prefix=bloons",
-    "Striker Jones": "https://static.wikia.nocookie.net/b__/images/b/b4/StrikerJonesPortrait.png/revision/latest?cb=20190612023137&path-prefix=bloons"
+    "Striker Jones": "https://static.wikia.nocookie.net/b__/images/b/b4/StrikerJonesPortrait.png/revision/latest?cb=20190612023137&path-prefix=bloons",
     "Adora": "https://static.wikia.nocookie.net/b__/images/2/2a/AdoraPortrait.png/revision/latest/scale-to-width-down/1000?cb=20191213222754&path-prefix=bloons",
     "Psi": "https://static.wikia.nocookie.net/b__/images/9/96/PsiPortrait.png/revision/latest/scale-to-width-down/1000?cb=20230322222255&path-prefix=bloons",
     "Sauda": "https://static.wikia.nocookie.net/b__/images/e/eb/SaudaPortrait.png/revision/latest/scale-to-width-down/1000?cb=20210311044157&path-prefix=bloons",
