@@ -6,9 +6,80 @@ import streamlit as st
 from io import BytesIO
 from PIL import Image
 import base64
+import json
 
 IMG_DIR = "images"
 os.makedirs(IMG_DIR, exist_ok=True)
+PREF_FILE = "preferences.json"
+
+# --- Load or initialize preferences ---
+if os.path.exists(PREF_FILE):
+    with open(PREF_FILE, "r") as f:
+        prefs = json.load(f)
+else:
+    # Default preferences structure
+    prefs = {
+        "maps": [],
+        "modes": [],
+        "heroes": [],
+        "num_towers": 5,
+        "allow_duplicates": True,
+        "num_duplicates": 1
+    }
+
+# --- Initialize session state from preferences ---
+for key, value in prefs.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+# --- UI ---
+
+st.header("Randomizer Preferences")
+
+# Maps
+maps_options = ["Map 1", "Map 2", "Map 3"]
+st.session_state["maps"] = st.multiselect("Select maps", maps_options, default=st.session_state["maps"])
+
+# Modes
+modes_options = ["Easy", "Medium", "Hard"]
+st.session_state["modes"] = st.multiselect("Select modes", modes_options, default=st.session_state["modes"])
+
+# Heroes
+heroes_options = ["Hero A", "Hero B", "Hero C"]
+st.session_state["heroes"] = st.multiselect("Select heroes", heroes_options, default=st.session_state["heroes"])
+
+# Towers settings
+st.session_state["num_towers"] = st.number_input("Number of towers", min_value=1, max_value=50, value=st.session_state["num_towers"])
+st.session_state["allow_duplicates"] = st.checkbox("Allow duplicates?", value=st.session_state["allow_duplicates"])
+if st.session_state["allow_duplicates"]:
+    st.session_state["num_duplicates"] = st.number_input("Max duplicates per tower", min_value=1, max_value=10, value=st.session_state["num_duplicates"])
+
+# --- Save changes to JSON ---
+def save_preferences():
+    to_save = {
+        "maps": st.session_state["maps"],
+        "modes": st.session_state["modes"],
+        "heroes": st.session_state["heroes"],
+        "num_towers": st.session_state["num_towers"],
+        "allow_duplicates": st.session_state["allow_duplicates"],
+        "num_duplicates": st.session_state.get("num_duplicates", 1)
+    }
+    with open(PREF_FILE, "w") as f:
+        json.dump(to_save, f)
+
+# Save automatically whenever a change is made
+save_preferences()
+
+st.write("Preferences saved!")
+st.json({
+    "Maps": st.session_state["maps"],
+    "Modes": st.session_state["modes"],
+    "Heroes": st.session_state["heroes"],
+    "Num Towers": st.session_state["num_towers"],
+    "Allow Duplicates": st.session_state["allow_duplicates"],
+    "Num Duplicates": st.session_state.get("num_duplicates", 1)
+})
+
 
 # --- UTILITY FUNCTIONS ---
 def sanitize_filename(name: str) -> str:
@@ -37,17 +108,18 @@ def get_ext_from_url(url: str) -> str:
     return ".png"
 
 @st.cache_data(show_spinner=False)
-def ensure_image(name: str, url: str):
+def ensure_image(name: str, url: str, force_download=False):
     """
     Ensure the image is available locally.
     Returns a local path if possible; otherwise returns the URL.
     """
     if not url:
         return None
+
     local_filename = sanitize_filename(name) + get_ext_from_url(url)
     local_path = os.path.join(IMG_DIR, local_filename)
 
-    if os.path.exists(local_path):
+    if os.path.exists(local_path) and not force_download:
         return local_path
 
     headers = {
@@ -66,6 +138,7 @@ def ensure_image(name: str, url: str):
             return url
     except Exception:
         return url
+
 
 def img_to_base64(path_or_url):
     """
@@ -158,7 +231,7 @@ maps = [
     {"name": "Quarry", "water": True},
     {"name": "Quiet Street", "water": True},
     {"name": "Rake", "water": True},
-    {"name": "Ravine", "water": True},
+    {"name": "Ravine", "water": False},
     {"name": "Resort", "water": True},
     {"name": "Sanctuary", "water": True},
     {"name": "Scrapyard", "water": False},
@@ -176,7 +249,8 @@ maps = [
 ]
 
 heroes = [
-    "Gwendolin", "Quincy", "Obyn Greenfoot", "Admiral Brickell", "Silas", "Striker Jones", "Adora"
+    "Gwendolin", "Quincy", "Obyn Greenfoot", "Admiral Brickell", "Silas", "Striker Jones", "Adora", "Psi", "Captain Churchill", "Corvus", "Geraldo", "Ezili", "Etienne", "Rosalia",
+    "Pat Fusty", "Sauda", "Benjamin"
 ]
 
 maps_images = {
@@ -351,14 +425,43 @@ all_towers = primary_towers + military_towers + magic_towers + support_towers
 
 tower_order = primary_towers + military_towers + magic_towers + support_towers
 
-def randomize_btd6_setup():
-    mode = random.choice(modes)
-    map_choice = random.choice(maps)
+# -------------------------
+# RANDOMIZE FUNCTION
+# -------------------------
+def randomize_btd6_setup(
+    selected_modes=None,
+    selected_maps=None,
+    selected_heroes=None,
+    tower_count=5,
+    allow_duplicates=False,
+    max_duplicates=3
+):
+    import random
+
+    # Use provided selections or fall back to defaults
+    available_modes = selected_modes if selected_modes else modes
+    available_maps = selected_maps if selected_maps else maps
+    available_heroes = selected_heroes if selected_heroes else heroes
+
+    # 🎯 Randomly pick a mode
+    mode = random.choice(available_modes)
+
+    # 🎯 Randomly pick a map
+    if isinstance(available_maps[0], dict):
+        map_choice = random.choice(available_maps)
+    else:
+        map_name = random.choice(available_maps)
+        map_choice = next((m for m in maps if m["name"] == map_name), None)
+        if map_choice is None:
+            map_choice = random.choice(maps)
+
     has_water = map_choice["water"]
 
-    valid_heroes = [h for h in heroes if has_water or h != "Admiral Brickell"]
+    # 🎯 Pick a valid hero (no Admiral Brickell if no water)
+    valid_heroes = [h for h in available_heroes if has_water or h != "Admiral Brickell"]
     hero = random.choice(valid_heroes)
 
+    # 🎯 Determine valid towers based on mode
     if mode == "Primary Only":
         valid_towers = primary_towers[:]
     elif mode == "Military Only":
@@ -370,18 +473,23 @@ def randomize_btd6_setup():
     else:
         valid_towers = all_towers[:]
 
+    # 🎯 Remove water towers if map has no water
     if not has_water:
-        invalid = ("Monkey Sub", "Monkey Buccaneer", "Beast Handler")
-        valid_towers = [t for t in valid_towers if t not in invalid]
+        valid_towers = [t for t in valid_towers if t not in ("Monkey Sub", "Monkey Buccaneer")]
 
+    # 🎯 Randomly pick towers
     tower_selection = []
-    while len(tower_selection) < 5:
+    while len(tower_selection) < tower_count:
         tower = random.choice(valid_towers)
-        if tower_selection.count(tower) < 3:
-            tower_selection.append(tower)
+        if allow_duplicates:
+            if tower_selection.count(tower) < max_duplicates:
+                tower_selection.append(tower)
+        else:
+            if tower not in tower_selection:
+                tower_selection.append(tower)
 
+    # 🎯 Sort towers by predefined order
     tower_selection.sort(key=lambda t: tower_order.index(t))
-
 
     return mode, map_choice, hero, tower_selection
 
@@ -403,13 +511,185 @@ h1,h2,h3 { color: #f1c40f !important; }
 st.title("🎯 BTD6 Randomizer")
 st.write("Randomly generate a game setup with mode, map, hero, and 5 towers.")
 
-# --- RANDOMIZE BUTTON ---
-if st.button("🎲 Randomize Setup"):
-    mode, map_choice, hero, towers = randomize_btd6_setup()
+# --- Available lists (consistent with your definitions) ---
+available_modes = modes  # use the 'modes' list you already have
+available_maps = [m["name"] for m in maps]  # use 'maps' variable (not all_maps)
+available_heroes = list(hero_images.keys())  # use hero_images for full hero list
 
-    col1, col2 = st.columns([2,1])
+# init session_state defaults
+if "selected_modes" not in st.session_state:
+    st.session_state.selected_modes = available_modes.copy()
+if "selected_maps" not in st.session_state:
+    st.session_state.selected_maps = available_maps.copy()
+if "selected_heroes" not in st.session_state:
+    st.session_state.selected_heroes = available_heroes.copy()
+if "last_config" not in st.session_state:
+    st.session_state.last_config = None
+
+# Modes by difficulty
+modes_by_difficulty = {
+    "Easy": ["Standard (Easy)", "Primary Only", "Deflation"],
+    "Medium": ["Standard (Medium)", "Reverse", "Military Only", "Apopalypse"],
+    "Hard": ["Standard (Hard)", "Alternate Bloons Round", "Impoppable", "CHIMPS", "Magic Only", "Double HP Moabs", "Half Cash"]
+}
+
+# Maps by difficulty
+maps_by_difficulty = {
+    "Beginner": ["Monkey Meadow", "In The Loop", "Middle Of The Road", "Spa Pits", "Tinkerton", "Tree Stump", "Town Center", "One Two Tree", "Scrapyard", "The Cabin", "Resort", "Skates", 
+    "Lotus Island", "Candy Falls", "Winter Park", "Carved", "Park Path", "Alpine Run", "Frozen Over", "Cubism", "Four Circles", "Hedge", "End Of The Road", "Logs"],
+    "Intermediate": ["Lost Crevasse", "Luminous Cove", "Sulfur Springs", "Water Park", "Polyphemus", "Covered Garden", "Quarry", "Quiet Street", "Bloonarius Prime", "Balance", "Encrypted", 
+    "Bazaar", "Adora's Temple", "Spring Spring", "KartsNDarts", "Moon Landing", "Haunted", "Downstream", "Firing Range", "Cracked", "Streambed", "Chutes", "Rake", "Spice Islands"],
+    "Advanced": ["Sunset Gulch", "Enchanted Glade", "Last Resort", "Ancient Portal", "Castle Revenge", "Dark Path", "Erosion", "Midnight Mansion", "Sunken Columns", "X Factor", "Mesa",
+    "Geared", "Spillway", "Cargo", "Pat's Pond", "Peninsula", "High Finance", "Another Brick", "Off The Coast", "Cornfield", "Underground"],
+    "Expert": ["Glacial Trail", "Dark Dungeons", "Sanctuary", "Ravine", "Flooded Valley", "Infernal", "Bloody Puddles", "Workshop", "Quad", "Dark Castle", "Muddy Puddles", "#Ouch"]
+}
+
+
+st.subheader("Select Modes")
+selected_modes = []
+
+for difficulty, mode_list in modes_by_difficulty.items():
+    st.markdown(f"**{difficulty} Modes**")
+    cols = st.columns(3)
+    for i, mode in enumerate(list(mode_list)):
+        if cols[i % 3].checkbox(mode, value=True):
+            selected_modes.append(mode)
+
+st.subheader("Select Maps")
+selected_maps = []
+
+# Create a dict for quick lookup of map objects by name
+map_dict = {m["name"]: m for m in maps}
+
+for difficulty, map_names in maps_by_difficulty.items():
+    st.markdown(f"**{difficulty} Maps**")
+    cols = st.columns(3)
+    for i, map_name in enumerate(list(map_names)):
+        if cols[i % 3].checkbox(map_name, value=True):
+            if map_name in map_dict:  # Make sure it's valid
+                selected_maps.append(map_dict[map_name])
+
+# --- HEROES ---
+st.subheader("Select Heroes")
+selected_heroes = []
+cols = st.columns(3)
+for i, hero in enumerate(sorted(heroes)):
+    if cols[i % 3].checkbox(hero, value=True):
+        selected_heroes.append(hero)
+
+# --- TOWER OPTIONS ---
+tower_count = st.number_input("Number of Towers", min_value=1, max_value=10, value=5)
+allow_duplicates = st.checkbox("Allow Duplicates", value=True)
+if allow_duplicates:
+    max_duplicates = st.number_input("Max Duplicates per Tower", min_value=1, max_value=tower_count, value=3)
+else:
+    max_duplicates = 1
+# -------------------------
+# Randomization helper
+# -------------------------
+def perform_randomize(filtered_modes, filtered_maps, filtered_heroes,
+                      tower_count, allow_duplicates=False, max_duplicates=None):
+    # validation
+    if not filtered_modes:
+        st.error("No modes selected — please select at least one mode.")
+        return
+    if not filtered_maps:
+        st.error("No maps selected — please select at least one map.")
+        return
+    if not filtered_heroes:
+        st.error("No heroes selected — please select at least one hero.")
+        return
+
+    # pick mode & map
+    mode = random.choice(filtered_modes)
+    map_choice = random.choice(filtered_maps)
+    has_water = map_choice.get("water", False)
+
+    # filter heroes by water (Admiral Brickell requires water)
+    valid_heroes_for_map = [h for h in filtered_heroes if (has_water or h != "Admiral Brickell")]
+    if not valid_heroes_for_map:
+        # fallback: remove Admiral Brickell from filtered_heroes (if it was the only one)
+        fallback = [h for h in filtered_heroes if h != "Admiral Brickell"]
+        if fallback:
+            st.warning("Admiral Brickell not valid on this map; choosing from other selected heroes.")
+            valid_heroes_for_map = fallback
+        else:
+            st.error("No heroes available for chosen map (water restriction). Please adjust hero selection.")
+            return
+    hero = random.choice(valid_heroes_for_map)
+
+    # determine valid towers based on mode and water rules
+    if mode == "Primary Only":
+        valid_towers = primary_towers[:]
+    elif mode == "Military Only":
+        valid_towers = military_towers[:]
+    elif mode == "Magic Only":
+        valid_towers = magic_towers[:]
+    elif mode == "CHIMPS":
+        valid_towers = [t for t in all_towers if t != "Banana Farm"]
+    else:
+        valid_towers = all_towers[:]
+
+    if not has_water:
+        invalid_water = ("Monkey Sub", "Monkey Buccaneer")
+        valid_towers = [t for t in valid_towers if t not in invalid_water]
+
+    if not valid_towers:
+        st.error("No valid towers available for the selected mode/map combination.")
+        return
+
+    # tower selection (respect duplicates limits)
+    towers = []
+    if allow_duplicates:
+        # safety: make sure target is achievable
+        max_dup = max_duplicates if max_duplicates else tower_count
+        max_possible = len(valid_towers) * max_dup
+        if tower_count > max_possible:
+            # adjust max_dup so it fits
+            adjusted_dup = (tower_count + len(valid_towers) - 1) // len(valid_towers)
+            st.warning(f"Requested {tower_count} towers with max_duplicates={max_dup} exceeds available variety. "
+                       f"Adjusting max duplicates to {adjusted_dup}.")
+            max_dup = adjusted_dup
+
+        attempts = 0
+        while len(towers) < tower_count and attempts < 10000:
+            attempts += 1
+            t = random.choice(valid_towers)
+            if towers.count(t) < max_dup:
+                towers.append(t)
+        if len(towers) < tower_count:
+            st.error("Couldn't fulfil tower selection within duplicate constraints. Try increasing max duplicates.")
+            return
+    else:
+        # no duplicates allowed
+        if tower_count > len(valid_towers):
+            st.warning(f"Requested {tower_count} unique towers but only {len(valid_towers)} available. "
+                       f"Reducing tower count to {len(valid_towers)}.")
+            tower_count = len(valid_towers)
+        towers = random.sample(valid_towers, k=tower_count)
+
+    # sort towers by your defined tower_order
+    towers.sort(key=lambda t: tower_order.index(t))
+
+    # ---- display results (re-uses your existing image/scaling logic) ----
+# -------------------------
+# BUTTON: Randomize
+# -------------------------
+if st.button("🎲 Randomize Setup"):
+    mode, map_choice, hero, towers = randomize_btd6_setup(
+        selected_modes=selected_modes,
+        selected_maps=selected_maps,
+        selected_heroes=selected_heroes,
+        tower_count=tower_count,
+        allow_duplicates=allow_duplicates,
+        max_duplicates=max_duplicates
+
+    )
+
 
     # --- MAP + MODE (side by side) ---
+    col1, col2 = st.columns([2,1])
+
     with col1:
         maps_url = maps_images.get(map_choice['name'])
         if maps_url:
@@ -427,7 +707,6 @@ if st.button("🎲 Randomize Setup"):
         </div>
         """, unsafe_allow_html=True)
 
-    # --- MODE ---
     with col2:
         mode_url = mode_images.get(mode)
         if mode_url:
@@ -472,7 +751,7 @@ if st.button("🎲 Randomize Setup"):
             t_b64 = img_to_base64(t_src) if t_src else None
         else:
             t_b64 = None
-        tower_html += f'<div><b>{t}</b><br>{f"<img src=\"{t_b64}\" width=\"100\">" if t_b64 else ""}</div>'
+        tower_html += f'<div><b>{t}</b><br>{f"<img src=\'{t_b64}\' width=\'100\'>" if t_b64 else ""}</div>'
 
     st.markdown(f"""
     <div class="btd6-box btd6-towers">
