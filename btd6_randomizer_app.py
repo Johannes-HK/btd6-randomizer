@@ -172,6 +172,7 @@ maps = [
     {"name": "Sunken Columns", "water": True},
     {"name": "Sunset Gulch", "water": False},
     {"name": "The Cabin", "water": True},
+    {"name": "Three Mines 'Round", "water": True},
     {"name": "Tinkerton", "water": True},
     {"name": "Underground", "water": False},
     {"name": "Winter Park", "water": True},
@@ -261,6 +262,7 @@ maps_images = {
     "Sunken Columns": "https://static.wikia.nocookie.net/b__/images/3/38/Sunken_Columns_No_UI.png/revision/latest?cb=20220217181915&path-prefix=bloons",
     "Sunset Gulch": "https://static.wikia.nocookie.net/b__/images/f/fb/Sunset_Gulch_No_UI.png/revision/latest?cb=20250618071944&path-prefix=bloons",
     "The Cabin": "https://static.wikia.nocookie.net/b__/images/b/b3/TheCabin_No_UI.png/revision/latest?cb=20211022045656&path-prefix=bloons",
+    "Three Mines 'Round": "https://www.bloonswiki.com/File:BTD6_MapSelectThreeMinesAroundMapButton.png",
     "Tinkerton": "https://static.wikia.nocookie.net/b__/images/a/af/Tinkerton_No_UI.png/revision/latest?cb=20240529062923&path-prefix=bloons",
     "Underground": "https://static.wikia.nocookie.net/b__/images/5/59/Underground_No_UI.png/revision/latest?cb=20200519013124&path-prefix=bloons",
     "Winter Park": "https://static.wikia.nocookie.net/b__/images/6/69/WinterPark_No_UI.png/revision/latest?cb=20200519013125&path-prefix=bloons",
@@ -465,8 +467,8 @@ modes_by_difficulty = {
 
 # Maps by difficulty
 maps_by_difficulty = {
-    "Beginner": ["Monkey Meadow", "In The Loop", "Middle Of The Road", "Spa Pits", "Tinkerton", "Tree Stump", "Town Center", "One Two Tree", "Scrapyard", "The Cabin", "Resort", "Skates", 
-    "Lotus Island", "Candy Falls", "Winter Park", "Carved", "Park Path", "Alpine Run", "Frozen Over", "Cubism", "Four Circles", "Hedge", "End Of The Road", "Logs"],
+    "Beginner": ["Monkey Meadow", "In The Loop", "Three Mines 'Round", "Spa Pits", "Tinkerton", "Tree Stump", "Town Center", "Middle Of The Road", "One Two Tree", "Scrapyard", "The Cabin",
+    "Resort", "Skates", "Lotus Island", "Candy Falls", "Winter Park", "Carved", "Park Path", "Alpine Run", "Frozen Over", "Cubism", "Four Circles", "Hedge", "End Of The Road", "Logs"],
     "Intermediate": ["Lost Crevasse", "Luminous Cove", "Sulfur Springs", "Water Park", "Polyphemus", "Covered Garden", "Quarry", "Quiet Street", "Bloonarius Prime", "Balance", "Encrypted", 
     "Bazaar", "Adora's Temple", "Spring Spring", "KartsNDarts", "Moon Landing", "Haunted", "Downstream", "Firing Range", "Cracked", "Streambed", "Chutes", "Rake", "Spice Islands"],
     "Advanced": ["Sunset Gulch", "Enchanted Glade", "Last Resort", "Ancient Portal", "Castle Revenge", "Dark Path", "Erosion", "Midnight Mansion", "Sunken Columns", "X Factor", "Mesa",
