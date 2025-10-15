@@ -262,7 +262,7 @@ maps_images = {
     "Sunken Columns": "https://static.wikia.nocookie.net/b__/images/3/38/Sunken_Columns_No_UI.png/revision/latest?cb=20220217181915&path-prefix=bloons",
     "Sunset Gulch": "https://static.wikia.nocookie.net/b__/images/f/fb/Sunset_Gulch_No_UI.png/revision/latest?cb=20250618071944&path-prefix=bloons",
     "The Cabin": "https://static.wikia.nocookie.net/b__/images/b/b3/TheCabin_No_UI.png/revision/latest?cb=20211022045656&path-prefix=bloons",
-    "Three Mines 'Round": "https://www.bloonswiki.com/File:BTD6_MapSelectThreeMinesAroundMapButton.png",
+    "Three Mines 'Round": "https://www.bloonswiki.com/images/7/7d/BTD6_MapSelectThreeMinesAroundMapButton.png",
     "Tinkerton": "https://static.wikia.nocookie.net/b__/images/a/af/Tinkerton_No_UI.png/revision/latest?cb=20240529062923&path-prefix=bloons",
     "Underground": "https://static.wikia.nocookie.net/b__/images/5/59/Underground_No_UI.png/revision/latest?cb=20200519013124&path-prefix=bloons",
     "Winter Park": "https://static.wikia.nocookie.net/b__/images/6/69/WinterPark_No_UI.png/revision/latest?cb=20200519013125&path-prefix=bloons",
@@ -477,36 +477,105 @@ maps_by_difficulty = {
 }
 
 
+# --- Initialize session state ---
+if "mode_states" not in st.session_state:
+    st.session_state.mode_states = {mode: True for modes in modes_by_difficulty.values() for mode in modes}
+if "map_states" not in st.session_state:
+    st.session_state.map_states = {m: True for maps in maps_by_difficulty.values() for m in maps}
+if "hero_states" not in st.session_state:
+    st.session_state.hero_states = {h: True for h in heroes}
+
+
+# --- Helper to update all checkboxes in a section ---
+def set_section_state(section_dict, items, value):
+    for item in items:
+        section_dict[item] = value
+
+
+# --- MODES ---
 st.subheader("Select Modes")
 selected_modes = []
 
 for difficulty, mode_list in modes_by_difficulty.items():
-    st.markdown(f"**{difficulty} Modes**")
+    st.markdown(f"### {difficulty} Modes")
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        if st.button(f"Select All ({difficulty})"):
+            set_section_state(st.session_state.mode_states, mode_list, True)
+            st.rerun()
+
+    with col2:
+        if st.button(f"Clear All ({difficulty})"):
+            set_section_state(st.session_state.mode_states, mode_list, False)
+            st.rerun()
+
     cols = st.columns(3)
-    for i, mode in enumerate(list(mode_list)):
-        if cols[i % 3].checkbox(mode, value=True):
+    for i, mode in enumerate(mode_list):
+        checked = cols[i % 3].checkbox(
+            mode,
+            value=st.session_state.mode_states[mode],
+            key=f"mode_{mode}"
+        )
+        st.session_state.mode_states[mode] = checked
+        if checked:
             selected_modes.append(mode)
 
+
+# --- MAPS ---
 st.subheader("Select Maps")
 selected_maps = []
 
-# Create a dict for quick lookup of map objects by name
-map_dict = {m["name"]: m for m in maps}
+for difficulty, map_list in maps_by_difficulty.items():
+    st.markdown(f"### {difficulty} Maps")
+    col1, col2 = st.columns([1, 1])
 
-for difficulty, map_names in maps_by_difficulty.items():
-    st.markdown(f"**{difficulty} Maps**")
+    with col1:
+        if st.button(f"Select All ({difficulty})", key=f"select_maps_{difficulty}"):
+            set_section_state(st.session_state.map_states, map_list, True)
+            st.rerun()
+
+    with col2:
+        if st.button(f"Clear All ({difficulty})", key=f"clear_maps_{difficulty}"):
+            set_section_state(st.session_state.map_states, map_list, False)
+            st.rerun()
+
     cols = st.columns(3)
-    for i, map_name in enumerate(list(map_names)):
-        if cols[i % 3].checkbox(map_name, value=True):
-            if map_name in map_dict:  # Make sure it's valid
-                selected_maps.append(map_dict[map_name])
+    for i, map_name in enumerate(map_list):
+        checked = cols[i % 3].checkbox(
+            map_name,
+            value=st.session_state.map_states[map_name],
+            key=f"map_{map_name}"
+        )
+        st.session_state.map_states[map_name] = checked
+        if checked:
+            selected_maps.append(map_name)
+
 
 # --- HEROES ---
 st.subheader("Select Heroes")
 selected_heroes = []
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    if st.button(f"Select All (Heroes)"):
+        set_section_state(st.session_state.hero_states, heroes, True)
+        st.rerun()
+
+with col2:
+    if st.button(f"Clear All (Heroes)"):
+        set_section_state(st.session_state.hero_states, heroes, False)
+        st.rerun()
+
 cols = st.columns(3)
 for i, hero in enumerate(sorted(heroes)):
-    if cols[i % 3].checkbox(hero, value=True):
+    checked = cols[i % 3].checkbox(
+        hero,
+        value=st.session_state.hero_states[hero],
+        key=f"hero_{hero}"
+    )
+    st.session_state.hero_states[hero] = checked
+    if checked:
         selected_heroes.append(hero)
 
 # --- TOWER OPTIONS ---
