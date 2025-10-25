@@ -144,7 +144,7 @@ maps = [
     {"name": "Erosion", "water": True},
     {"name": "Firing Range", "water": False},
     {"name": "Four Circles", "water": True},
-    {"name": "Glacial Trail", "water": True},
+    {"name": "Glacial Trail", "water": False},
     {"name": "Haunted", "water": True},
     {"name": "Hedge", "water": False},
     {"name": "Infernal", "water": True},
@@ -391,6 +391,10 @@ def randomize_btd6_setup(
 
     # 🎯 Pick a valid hero (no Admiral Brickell if no water)
     valid_heroes = [h for h in available_heroes if has_water or h != "Admiral Brickell"]
+    if mode == "Deflation":
+        valid_heroes = [h for h in valid_heroes if h != "Benjamin"]
+    elif mode == "CHIMPS":
+        valid_heroes = [h for h in valid_heroes if h != "Benjamin"]
     hero = random.choice(valid_heroes)
 
     # 🎯 Determine valid towers based on mode
@@ -401,6 +405,8 @@ def randomize_btd6_setup(
     elif mode == "Magic Only":
         valid_towers = magic_towers[:]
     elif mode == "CHIMPS":
+        valid_towers = [t for t in all_towers if t != "Banana Farm"]
+    elif mode == "Deflation":
         valid_towers = [t for t in all_towers if t != "Banana Farm"]
     else:
         valid_towers = all_towers[:]
