@@ -106,6 +106,7 @@ maps = [
     {"name": "Carved", "water": True},
     {"name": "Water Park", "water": True},
     {"name": "Spa Pits", "water": True},
+    {"name": "Tricky Tracks", "water": False},
     {"name": "Flooded Valley", "water": True},
     {"name": "Mesa", "water": False},
     {"name": "Middle of the Road", "water": True},
@@ -263,6 +264,7 @@ maps_images = {
     "Sunset Gulch": "https://static.wikia.nocookie.net/b__/images/f/fb/Sunset_Gulch_No_UI.png/revision/latest?cb=20250618071944&path-prefix=bloons",
     "The Cabin": "https://static.wikia.nocookie.net/b__/images/b/b3/TheCabin_No_UI.png/revision/latest?cb=20211022045656&path-prefix=bloons",
     "Three Mines 'Round": "https://static.wikia.nocookie.net/b__/images/b/bf/Three_Mines_Around_No_UI.png/revision/latest?cb=20251015174111&path-prefix=bloons",
+    "Tricky Tracks": "https://static.wikia.nocookie.net/b__/images/b/be/Screenshot_20251204_223009_Bloons_TD_6.png/revision/latest/scale-to-width-down/1000?cb=20251204105533&path-prefix=bloons",
     "Tinkerton": "https://static.wikia.nocookie.net/b__/images/a/af/Tinkerton_No_UI.png/revision/latest?cb=20240529062923&path-prefix=bloons",
     "Underground": "https://static.wikia.nocookie.net/b__/images/5/59/Underground_No_UI.png/revision/latest?cb=20200519013124&path-prefix=bloons",
     "Winter Park": "https://static.wikia.nocookie.net/b__/images/6/69/WinterPark_No_UI.png/revision/latest?cb=20200519013125&path-prefix=bloons",
@@ -479,7 +481,7 @@ maps_by_difficulty = {
     "Bazaar", "Adora's Temple", "Spring Spring", "KartsNDarts", "Moon Landing", "Haunted", "Downstream", "Firing Range", "Cracked", "Streambed", "Chutes", "Rake", "Spice Islands"],
     "Advanced": ["Sunset Gulch", "Enchanted Glade", "Last Resort", "Ancient Portal", "Castle Revenge", "Dark Path", "Erosion", "Midnight Mansion", "Sunken Columns", "X Factor", "Mesa",
     "Geared", "Spillway", "Cargo", "Pat's Pond", "Peninsula", "High Finance", "Another Brick", "Off The Coast", "Cornfield", "Underground"],
-    "Expert": ["Glacial Trail", "Dark Dungeons", "Sanctuary", "Ravine", "Flooded Valley", "Infernal", "Bloody Puddles", "Workshop", "Quad", "Dark Castle", "Muddy Puddles", "#Ouch"]
+    "Expert": ["Tricky Tracks", "Glacial Trail", "Dark Dungeons", "Sanctuary", "Ravine", "Flooded Valley", "Infernal", "Bloody Puddles", "Workshop", "Quad", "Dark Castle", "Muddy Puddles", "#Ouch"]
 }
 
 
